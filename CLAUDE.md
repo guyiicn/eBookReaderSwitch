@@ -71,6 +71,74 @@ NODEBUG=true make
 - **mupdf 编译失败**: 确保已安装 `libfreetype6-dev`
 - **链接错误 -ltwili**: 使用 `NODEBUG=true make` 或安装 twili 库
 
+## Arch Linux 编译环境搭建
+
+### 1. 安装 devkitPro
+
+```bash
+# 导入 devkitPro GPG 密钥
+sudo pacman-key --recv BC26F752D25B92CE272E0F44F7FD5492264BB9D0 --keyserver keyserver.ubuntu.com
+sudo pacman-key --lsign BC26F752D25B92CE272E0F44F7FD5492264BB9D0
+
+# 添加 devkitPro 仓库到 /etc/pacman.conf
+sudo bash -c 'cat >> /etc/pacman.conf << EOF
+
+[dkp-libs]
+Server = https://pkg.devkitpro.org/packages
+
+[dkp-linux]
+Server = https://pkg.devkitpro.org/packages/linux/\$arch/
+EOF'
+
+# 更新并安装
+sudo pacman -Syu
+sudo pacman -S switch-dev dkp-toolchain-vars
+```
+
+### 2. 安装 Switch 开发库
+
+```bash
+# 使用 dkp-pacman 安装 Switch 专用库
+sudo dkp-pacman -S switch-portlibs switch-sdl2 switch-sdl2_ttf switch-sdl2_image switch-libconfig
+
+# 安装系统依赖
+sudo pacman -S base-devel freetype2 git
+```
+
+### 3. 设置环境变量
+
+```bash
+# 添加到 ~/.bashrc 或 ~/.zshrc
+echo 'export DEVKITPRO=/opt/devkitpro' >> ~/.bashrc
+echo 'export DEVKITARM=/opt/devkitpro/devkitARM' >> ~/.bashrc
+echo 'export DEVKITA64=/opt/devkitpro/devkitA64' >> ~/.bashrc
+echo 'export PATH=$DEVKITPRO/tools/bin:$DEVKITPRO/devkitA64/bin:$PATH' >> ~/.bashrc
+source ~/.bashrc
+```
+
+### 4. 编译项目
+
+```bash
+# 克隆仓库
+git clone https://github.com/guyiicn/eBookReaderSwitch.git
+cd eBookReaderSwitch
+
+# 初始化子模块
+git submodule update --init --recursive
+
+# 编译 MuPDF (首次)
+make mupdf
+
+# 编译主程序
+NODEBUG=true make
+```
+
+### Arch 常见问题
+
+- **pacman-key 错误**: 尝试 `sudo pacman-key --init && sudo pacman-key --populate`
+- **找不到 dkp-pacman**: 确保已安装 `switch-dev`，它会自动安装 `dkp-pacman`
+- **SSL 证书错误**: 运行 `sudo pacman -S ca-certificates`
+
 ## Build Commands (Quick Reference)
 
 ```bash
