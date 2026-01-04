@@ -139,6 +139,33 @@ NODEBUG=true make
 - **找不到 dkp-pacman**: 确保已安装 `switch-dev`，它会自动安装 `dkp-pacman`
 - **SSL 证书错误**: 运行 `sudo pacman -S ca-certificates`
 
+## Docker 编译 (推荐，无需本地环境配置)
+
+使用 devkitPro 官方 Docker 镜像，无需配置本地环境：
+
+```bash
+# 克隆仓库
+git clone https://github.com/guyiicn/eBookReaderSwitch.git
+cd eBookReaderSwitch
+git submodule update --init --recursive
+
+# 使用 Docker 编译 (一键完成)
+docker run --rm -v "$(pwd):/src" -w /src devkitpro/devkita64:latest bash -c "
+    apt-get update && apt-get install -y libfreetype6-dev &&
+    dkp-pacman -Syu --noconfirm switch-sdl2 switch-sdl2_ttf switch-sdl2_image switch-libconfig &&
+    make mupdf &&
+    NODEBUG=true make
+"
+```
+
+编译完成后 `eBookReaderSwitch.nro` 将生成在当前目录。
+
+### Docker 常见问题
+
+- **权限问题**: Linux 上可能需要 `sudo docker run ...` 或将用户添加到 docker 组
+- **文件权限**: 编译后文件可能属于 root，运行 `sudo chown -R $(id -u):$(id -g) .` 修复
+- **首次运行慢**: Docker 需要下载约 1GB 的镜像，之后会缓存
+
 ## Build Commands (Quick Reference)
 
 ```bash
