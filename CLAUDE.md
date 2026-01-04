@@ -6,22 +6,82 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 eBookReaderSwitch is a Nintendo Switch homebrew eBook reader application. It supports PDF, EPUB, CBZ, and XPS file formats using the MuPDF library for document rendering and SDL2 for graphics.
 
-## Build Commands
+## WSL (x86) 编译环境搭建
 
-**Prerequisites:** devkitPro toolchain with libnx and switch-portlibs installed.
+### 1. 安装 WSL Ubuntu
+
+```powershell
+# Windows PowerShell (管理员)
+wsl --install -d Ubuntu
+```
+
+### 2. 安装 devkitPro 工具链
 
 ```bash
-# Install dependencies (via devkitPro pacman)
-pacman -S libnx switch-portlibs
+# 更新系统
+sudo apt update && sudo apt upgrade -y
 
+# 安装依赖
+sudo apt install -y wget git make build-essential libfreetype6-dev
+
+# 下载并运行 devkitPro 安装脚本
+wget https://apt.devkitpro.org/install-devkitpro-pacman
+chmod +x ./install-devkitpro-pacman
+sudo ./install-devkitpro-pacman
+
+# 安装 Switch 开发工具和库
+sudo dkp-pacman -S switch-dev switch-portlibs switch-sdl2 switch-sdl2_ttf switch-sdl2_image switch-libconfig
+
+# 设置环境变量 (添加到 ~/.bashrc)
+echo 'export DEVKITPRO=/opt/devkitpro' >> ~/.bashrc
+echo 'export DEVKITARM=/opt/devkitpro/devkitARM' >> ~/.bashrc
+echo 'export DEVKITA64=/opt/devkitpro/devkitA64' >> ~/.bashrc
+echo 'export PATH=$DEVKITPRO/tools/bin:$DEVKITPRO/devkitA64/bin:$PATH' >> ~/.bashrc
+source ~/.bashrc
+```
+
+### 3. 克隆并编译项目
+
+```bash
+# 克隆仓库
+git clone https://github.com/guyiicn/eBookReaderSwitch.git
+cd eBookReaderSwitch
+
+# 初始化 mupdf 子模块
+git submodule update --init --recursive
+
+# 编译 MuPDF 库 (首次编译必须)
+make mupdf
+
+# 编译主程序 (不带调试器)
+NODEBUG=true make
+
+# 或者带调试器编译 (需要 twili)
+# sudo dkp-pacman -S switch-twili
+# make
+```
+
+### 4. 编译输出
+
+编译成功后生成 `eBookReaderSwitch.nro`，将其复制到 Switch SD 卡的 `/switch/` 目录即可运行。
+
+### 常见问题
+
+- **找不到 aarch64-none-elf-gcc**: 确保环境变量已正确设置，运行 `source ~/.bashrc`
+- **mupdf 编译失败**: 确保已安装 `libfreetype6-dev`
+- **链接错误 -ltwili**: 使用 `NODEBUG=true make` 或安装 twili 库
+
+## Build Commands (Quick Reference)
+
+```bash
 # Build MuPDF library (required before first build)
 make mupdf
 
-# Build the application
-make
-
-# Build without twili debugger (for release/CI)
+# Build the application (release)
 NODEBUG=true make
+
+# Build with twili debugger
+make
 
 # Clean build artifacts
 make clean
